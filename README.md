@@ -50,10 +50,10 @@ npm start
 
 ## Скриншоты
 <p align="center">
-  <img src="public/screenshot-1.png" alt="Скриншот 1" width="24%" />
-  <img src="public/screenshot-2.png" alt="Скриншот 2" width="24%" />
-  <img src="public/screenshot-3.png" alt="Скриншот 3" width="24%" />
-  <img src="public/screenshot-4.png" alt="Скриншот 4" width="24%" />
+  <img src="public/screenshot-1.png" alt="Скриншот 1" width="49%" />
+  <img src="public/screenshot-2.png" alt="Скриншот 2" width="49%" />
+  <img src="public/screenshot-3.png" alt="Скриншот 3" width="49%" />
+  <img src="public/screenshot-4.png" alt="Скриншот 4" width="49%" />
   
 </p>
 
@@ -111,9 +111,9 @@ npm start
 
 ## Screenshots
 <p align="center">
-  <img src="public/screenshot-1.png" alt="Screenshot 1" width="24%" />
-  <img src="public/screenshot-2.png" alt="Screenshot 2" width="24%" />
-  <img src="public/screenshot-3.png" alt="Screenshot 3" width="24%" />
-  <img src="public/screenshot-4.png" alt="Screenshot 4" width="24%" />
+  <img src="public/screenshot-1.png" alt="Screenshot 1" width="49%" />
+  <img src="public/screenshot-2.png" alt="Screenshot 2" width="49%" />
+  <img src="public/screenshot-3.png" alt="Screenshot 3" width="49%" />
+  <img src="public/screenshot-4.png" alt="Screenshot 4" width="49%" />
 
 </p>
