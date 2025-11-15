@@ -3,6 +3,7 @@ export type Alphabet = 'RU' | 'EN';
 export interface Settings {
   fontSizePx: number;
   letterOffsetPx: number;
+  letterGapPx: number;
   focusDotOffsetY: number;
   focusDotPosition: 'center' | 'lower';
   alphabet: Alphabet;
@@ -11,6 +12,8 @@ export interface Settings {
   wordsPerSession: number;
   timePerLetterMs: number;
   wordLength: number;
+  pixelsPerCm: number;
+  viewingDistanceCm: number;
 }
 
 export type Mode = 'single' | 'multi' | 'moving';
