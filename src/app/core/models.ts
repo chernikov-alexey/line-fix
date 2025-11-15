@@ -7,6 +7,7 @@ export interface Settings {
   focusDotOffsetY: number;
   focusDotPosition: 'center' | 'lower';
   alphabet: Alphabet;
+  flankers: 'none' | 'left' | 'right' | 'both';
   multiLettersMin: number;
   multiLettersMax: number;
   wordsPerSession: number;
@@ -14,6 +15,15 @@ export interface Settings {
   wordLength: number;
   pixelsPerCm: number;
   viewingDistanceCm: number;
+  adaptiveEnabled?: boolean;
+  adaptiveWindowN?: number;
+  adaptiveStepPx?: number;
+  adaptiveUpPercent?: number;
+  adaptiveDownPercent?: number;
+  catchEnabled?: boolean;
+  catchKey?: string;
+  catchWindowMs?: number;
+  catchProbability?: number;
 }
 
 export type Mode = 'single' | 'multi' | 'moving';
@@ -31,6 +41,8 @@ export interface Mode1Result extends SessionBase {
   correct: number;
   wrong: number;
   avgReactionMs?: number;
+  catchTotal?: number;
+  catchSuccess?: number;
 }
 
 export interface Mode2Result extends SessionBase {

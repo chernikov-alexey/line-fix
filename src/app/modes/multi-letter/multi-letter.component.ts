@@ -15,7 +15,7 @@ interface LetterItem { char: string; state: 'show' | 'hide' | 'correct' | 'wrong
   styles: [`
     .stage { position: relative; width: 100%; height: calc(100vh - 160px); overflow: hidden; background:#fff; }
     .center-dot { position:absolute; width:12px; height:12px; background:#212529; border-radius:50%; left:50%; transform: translateX(-50%); }
-    .row-wrap { position:absolute; left:50%; transform: translateX(-50%); display:flex; gap: 24px; align-items: flex-start; }
+    .row-wrap { position:absolute; left:50%; transform: translateX(-50%); display:flex; align-items: flex-start; }
     .letter-box { position: relative; min-width: 72px; min-height: 96px; display:flex; flex-direction: column; align-items: center; justify-content: flex-start; }
     .letter { font-weight: 700; transition: opacity .35s ease, transform .35s ease; opacity: 1; }
     .letter.hide { opacity: 0; transform: translateY(-8px); }
@@ -37,7 +37,7 @@ interface LetterItem { char: string; state: 'show' | 'hide' | 'correct' | 'wrong
   </div>
 
   <div class="stage">
-    <div class="row-wrap" [style.top]="lettersTop()">
+    <div class="row-wrap" [style.top]="lettersTop()" [style.gap.px]="letterGapPx()">
       <div class="letter-box" *ngFor="let it of currentSet(); let i = index" [style.lineHeight.px]="fontSizePx()">
         <div class="letter" [class.hide]="it.state==='hide'" [class.correct]="it.state==='correct'" [class.wrong]="it.state==='wrong'" [style.fontSize.px]="fontSizePx()">{{ it.char }}</div>
         <div class="dot" *ngIf="i===activeIndex()" [style.marginTop.px]="letterOffsetPx()"></div>
@@ -81,6 +81,7 @@ export class MultiLetterComponent {
   focusTop = computed(() => `calc(50% + ${this.focusOffset()}px)`);
   lettersTop = computed(() => `calc(50% + ${this.focusOffset()}px - ${this.settings.settings().letterOffsetPx}px)`);
   letterOffsetPx = computed(() => this.settings.settings().letterOffsetPx);
+  letterGapPx = computed(() => this.settings.settings().letterGapPx);
 
   private genSet() {
     const s = this.settings.settings();

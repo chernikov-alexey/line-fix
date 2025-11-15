@@ -19,6 +19,10 @@ import { randomLetter } from '../../shared/letters';
     .letter.hide { opacity: 0; transform: translateY(-8px); }
     .letter.correct { color: #16a34a; }
     .dot { width: 8px; height: 8px; background:#212529; border-radius:50%; opacity: .8; }
+    .word-row { display:flex; align-items: baseline; }
+    .flanker { opacity: .6; }
+    .dot.blink { animation: dot-blink 0.4s ease-in-out infinite alternate; }
+    @keyframes dot-blink { from { transform: scale(1); opacity:.8; } to { transform: scale(1.4); opacity:1; } }
     .overlay { position:absolute; inset:0; background: rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; }
   `],
   template: `
@@ -43,9 +47,13 @@ import { randomLetter } from '../../shared/letters';
     <div class="row-wrap" [style.top]="lettersTop()">
       <div class="letter-box" [style.lineHeight.px]="fontSizePx()">
         <div class="letter" [class.show]="letterState()==='show'" [class.hide]="letterState()==='hide'" [class.correct]="letterCorrect()" [style.fontSize.px]="fontSizePx()">
-          {{ currentLetter() }}
+          <div class="word-row" [style.gap.px]="letterGapPx()">
+            <span class="flanker" *ngIf="showLeftFlanker()">{{ flankerLeft() }}</span>
+            <span class="target">{{ currentLetter() }}</span>
+            <span class="flanker" *ngIf="showRightFlanker()">{{ flankerRight() }}</span>
+          </div>
         </div>
-        <div class="dot" [style.marginTop.px]="letterOffsetPx()"></div>
+        <div class="dot" [class.blink]="catchActive()" [style.marginTop.px]="letterOffsetPx()"></div>
       </div>
     </div>
     <div class="overlay" *ngIf="finished()">
@@ -84,19 +92,51 @@ export class SingleLetterComponent {
   private startedAt = 0;
   private letterShownAt = 0;
   private reactionSum = 0;
+  // adaptive & catch
+  private recentCorrect: boolean[] = [];
+  catchActive = signal(false);
+  catchTotal = signal(0);
+  catchSuccess = signal(0);
+  private catchTimer: any = null;
 
   fontSizePx = computed(() => this.settings.settings().fontSizePx);
   private focusOffset = computed(() => this.settings.settings().focusDotOffsetY + (this.settings.settings().focusDotPosition === 'lower' ? 80 : 0));
   focusTop = computed(() => `calc(50% + ${this.focusOffset()}px)`);
   lettersTop = computed(() => `calc(50% + ${this.focusOffset()}px - ${this.settings.settings().letterOffsetPx}px)`);
+  letterGapPx = computed(() => this.settings.settings().letterGapPx);
   letterOffsetPx = computed(() => this.settings.settings().letterOffsetPx);
+
+  flankerLeft = signal<string>('');
+  flankerRight = signal<string>('');
+  showLeftFlanker = computed(() => {
+    const f = this.settings.settings().flankers; return f === 'left' || f === 'both';
+  });
+  showRightFlanker = computed(() => {
+    const f = this.settings.settings().flankers; return f === 'right' || f === 'both';
+  });
 
   private nextLetter() {
     const s = this.settings.settings();
     this.currentLetter.set(randomLetter(s.alphabet));
+    // генерируем фланкеры, отличные от целевой буквы
+    const target = this.currentLetter().toUpperCase();
+    let l = randomLetter(s.alphabet).toUpperCase();
+    let r = randomLetter(s.alphabet).toUpperCase();
+    if (l === target) l = randomLetter(s.alphabet).toUpperCase();
+    if (r === target) r = randomLetter(s.alphabet).toUpperCase();
+    this.flankerLeft.set(l);
+    this.flankerRight.set(r);
     this.letterCorrect.set(false);
     this.letterShownAt = Date.now();
     this.letterState.set('show');
+    // schedule catch-trial
+    if (s.catchEnabled && Math.random() < (s.catchProbability ?? 0)) {
+      this.catchActive.set(true);
+      this.catchTotal.update(v => v + 1);
+      if (this.catchTimer) { clearTimeout(this.catchTimer); this.catchTimer = null; }
+      const windowMs = s.catchWindowMs ?? 1000;
+      this.catchTimer = setTimeout(() => { this.catchActive.set(false); this.catchTimer = null; }, windowMs);
+    }
   }
 
   start() {
@@ -114,6 +154,14 @@ export class SingleLetterComponent {
 
   private handleGuess(ch: string) {
     if (!this.running()) return;
+    // handle catch key first
+    const sset = this.settings.settings();
+    if (this.catchActive() && ch === (sset.catchKey ?? ' ')) {
+      this.catchSuccess.update(v => v + 1);
+      this.catchActive.set(false);
+      if (this.catchTimer) { clearTimeout(this.catchTimer); this.catchTimer = null; }
+      return; // do not treat as letter guess
+    }
     const expected = (this.currentLetter() || '').toUpperCase();
     const got = (ch || '').toUpperCase();
     if (!expected || got.length !== 1) return;
@@ -125,6 +173,9 @@ export class SingleLetterComponent {
     const rt = Date.now() - this.letterShownAt;
     this.reactionSum += rt;
     this.letterCorrect.set(ok);
+    // adaptive staircase window
+    this.recentCorrect.push(ok);
+    this.maybeAdapt();
     this.letterState.set('hide');
     setTimeout(() => {
       if (!this.running()) return;
@@ -160,6 +211,8 @@ export class SingleLetterComponent {
       wrong: this.wrong(),
       durationMs: dur,
       avgReactionMs: avg,
+      catchTotal: this.catchTotal(),
+      catchSuccess: this.catchSuccess(),
     };
     this.results.add(payload);
     this.finished.set(true);
@@ -169,6 +222,10 @@ export class SingleLetterComponent {
     this.finished.set(false);
     this.currentLetter.set('');
     this.letterState.set('hide');
+    this.catchActive.set(false);
+    if (this.catchTimer) { clearTimeout(this.catchTimer); this.catchTimer = null; }
+    this.catchTotal.set(0); this.catchSuccess.set(0);
+    this.recentCorrect = [];
   }
 
   fmtDuration(ms: number) {
@@ -176,5 +233,22 @@ export class SingleLetterComponent {
     const m = Math.floor(s / 60);
     const ss = s % 60;
     return `${m}:${ss.toString().padStart(2,'0')}`;
+  }
+
+  private maybeAdapt() {
+    const cfg = this.settings.settings();
+    if (!cfg.adaptiveEnabled) return;
+    const N = cfg.adaptiveWindowN ?? 10;
+    if (this.recentCorrect.length < N) return;
+    const okCount = this.recentCorrect.reduce((a, b) => a + (b ? 1 : 0), 0);
+    const pct = (okCount / this.recentCorrect.length) * 100;
+    const upT = cfg.adaptiveUpPercent ?? 85;
+    const dnT = cfg.adaptiveDownPercent ?? 60;
+    const step = cfg.adaptiveStepPx ?? 5;
+    let off = cfg.letterOffsetPx;
+    if (pct >= upT) off = Math.min(600, off + step);
+    else if (pct <= dnT) off = Math.max(0, off - step);
+    if (off !== cfg.letterOffsetPx) this.settings.update({ letterOffsetPx: off });
+    this.recentCorrect = [];
   }
 }

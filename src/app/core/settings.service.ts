@@ -7,14 +7,27 @@ const SETTINGS_KEY = 'linefix.settings.v1';
 const DEFAULTS: Settings = {
   fontSizePx: 64,
   letterOffsetPx: 20,
+  letterGapPx: 24,
   focusDotOffsetY: 0,
   focusDotPosition: 'center',
   alphabet: 'RU',
+  flankers: 'none',
   multiLettersMin: 2,
   multiLettersMax: 6,
   wordsPerSession: 20,
   timePerLetterMs: 1200,
   wordLength: 6,
+  pixelsPerCm: 38,
+  viewingDistanceCm: 50,
+  adaptiveEnabled: false,
+  adaptiveWindowN: 10,
+  adaptiveStepPx: 5,
+  adaptiveUpPercent: 85,
+  adaptiveDownPercent: 60,
+  catchEnabled: false,
+  catchKey: ' ',
+  catchWindowMs: 1000,
+  catchProbability: 0.16,
 };
 
 @Injectable({ providedIn: 'root' })

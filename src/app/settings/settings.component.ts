@@ -15,10 +15,16 @@ import { Settings } from '../core/models';
       <div class="col-md-4">
         <label class="form-label">Размер шрифта (px)</label>
         <input type="number" class="form-control" [(ngModel)]="model.fontSizePx" name="fontSizePx" min="12" max="200">
+        <div class="form-text">≈ {{ toDeg(model.fontSizePx) }}°</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Расстояние буквы от точки (px)</label>
         <input type="number" class="form-control" [(ngModel)]="model.letterOffsetPx" name="letterOffsetPx" min="0" max="600">
+        <div class="form-text">≈ {{ toDeg(model.letterOffsetPx) }}°</div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Межбуквенный интервал (px)</label>
+        <input type="number" class="form-control" [(ngModel)]="model.letterGapPx" name="letterGapPx" min="0" max="120">
       </div>
       <div class="col-md-4">
         <label class="form-label">Смещение точки по вертикали (px)</label>
@@ -36,6 +42,15 @@ import { Settings } from '../core/models';
         <select class="form-select" [(ngModel)]="model.alphabet" name="alphabet">
           <option value="RU">Русский</option>
           <option value="EN">Английский</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Фланкеры</label>
+        <select class="form-select" [(ngModel)]="model.flankers" name="flankers">
+          <option value="none">Нет</option>
+          <option value="left">Слева</option>
+          <option value="right">Справа</option>
+          <option value="both">Слева и справа</option>
         </select>
       </div>
       <div class="col-md-4">
@@ -58,6 +73,14 @@ import { Settings } from '../core/models';
         <label class="form-label">Время на букву (мс, режим 3)</label>
         <input type="number" class="form-control" [(ngModel)]="model.timePerLetterMs" name="timePerLetterMs" min="300" max="5000" step="100">
       </div>
+      <div class="col-md-4">
+        <label class="form-label">Плотность пикселей (px/см)</label>
+        <input type="number" class="form-control" [(ngModel)]="model.pixelsPerCm" name="pixelsPerCm" min="10" max="200">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Дистанция до монитора (см)</label>
+        <input type="number" class="form-control" [(ngModel)]="model.viewingDistanceCm" name="viewingDistanceCm" min="20" max="200">
+      </div>
       <div class="col-12">
         <button class="btn btn-primary" type="submit">Сохранить</button>
       </div>
@@ -77,5 +100,12 @@ export class SettingsComponent {
 
   save() {
     this.settings.update(this.model);
+  }
+
+  toDeg(px: number): string {
+    const cm = px / Math.max(1, this.model.pixelsPerCm || 1);
+    const dist = Math.max(1, this.model.viewingDistanceCm || 1);
+    const deg = 2 * Math.atan(cm / (2 * dist)) * 180 / Math.PI;
+    return deg.toFixed(2);
   }
 }

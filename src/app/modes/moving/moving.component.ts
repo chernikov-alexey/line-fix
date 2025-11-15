@@ -12,7 +12,7 @@ import { randomWord } from '../../shared/letters';
   imports: [CommonModule, RouterLink],
   styles: [`
     .stage { position: relative; width: 100%; height: calc(100vh - 160px); overflow: hidden; background: #fff; }
-    .row-wrap { position:absolute; left:50%; transform: translateX(-50%); display:flex; gap: 24px; align-items: flex-start; }
+    .row-wrap { position:absolute; left:50%; transform: translateX(-50%); display:flex; align-items: flex-start; }
     .letter-box { position: relative; min-width: 72px; min-height: 96px; display:flex; flex-direction: column; align-items: center; justify-content: flex-start; }
     .letter { font-weight: 700; }
     .moving-dot { position:absolute; width:12px; height:12px; background:#212529; border-radius:50%; transition: left var(--dur) linear; }
@@ -31,7 +31,7 @@ import { randomWord } from '../../shared/letters';
   </div>
 
   <div class="stage">
-    <div class="row-wrap" [style.top]="lettersTop()" [style.width.px]="rowWidth()" style="position: relative;">
+    <div class="row-wrap" [style.top]="lettersTop()" [style.width.px]="rowWidth()" [style.gap.px]="letterGapPx()" style="position: relative;">
       <div class="letter-box" *ngFor="let ch of letters(); let i = index" [style.lineHeight.px]="fontSizePx()">
         <div class="letter" [style.fontSize.px]="fontSizePx()" [style.color]="colorFor(i)">{{ ch }}</div>
       </div>
@@ -71,7 +71,12 @@ export class MovingComponent {
   private focusOffset = computed(() => this.settings.settings().focusDotOffsetY + (this.settings.settings().focusDotPosition === 'lower' ? 80 : 0));
   lettersTop = computed(() => `calc(50% + ${this.focusOffset()}px - ${this.settings.settings().letterOffsetPx}px)`);
   boxWidth = computed(() => Math.max(72, Math.round(this.fontSizePx() * 1.4)));
-  rowWidth = computed(() => this.boxWidth() * this.letters().length);
+  letterGapPx = computed(() => this.settings.settings().letterGapPx);
+  rowWidth = computed(() => {
+    const n = this.letters().length;
+    if (n <= 0) return 0;
+    return this.boxWidth() * n + this.letterGapPx() * Math.max(0, n - 1);
+  });
   letterOffsetPx = computed(() => this.settings.settings().letterOffsetPx);
   dotTopPx = computed(() => this.fontSizePx());
   lettersTotal = computed(() => this.letters().length);
@@ -95,7 +100,8 @@ export class MovingComponent {
     const idx = this.index();
     if (idx < 0) return 0;
     const bw = this.boxWidth();
-    return Math.round(idx * bw + bw / 2 - 6); // center of box minus half dot width
+    const gap = this.letterGapPx();
+    return Math.round(idx * (bw + gap) + bw / 2 - 6); // center of box minus half dot width
   });
 
   colorFor(i: number) {
