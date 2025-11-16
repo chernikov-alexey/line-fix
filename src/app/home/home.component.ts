@@ -9,7 +9,7 @@ import { RouterLink } from '@angular/router';
   <div class="container py-4">
     <div class="row g-3">
       <div class="col-12">
-        <h1 class="h3">LineFix test</h1>
+        <h1 class="h3">LineFix</h1>
         <p class="text-muted">Тренажер фиксации взгляда и периферического распознавания.</p>
       </div>
       <div class="col-md-4">
